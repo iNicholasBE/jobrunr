@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.mongodb.client.MongoClient;
 import org.jobrunr.dashboard.JobRunrDashboardWebServer;
+import org.jobrunr.dashboard.JobRunrDashboardWebServerConfiguration;
 import org.jobrunr.kotlin.utils.mapper.KotlinxSerializationJsonMapper;
 import org.jobrunr.scheduling.JobRequestScheduler;
 import org.jobrunr.scheduling.JobScheduler;
@@ -149,6 +150,34 @@ public class JobRunrAutoConfigurationTest {
                     assertThat(context).hasSingleBean(JobRunrDashboardWebServer.class);
                     assertThat(context.getBean(JobRunrDashboardWebServer.class))
                             .hasFieldOrPropertyWithValue("allowAnonymousDataUsage", false);
+                });
+    }
+
+    @Test
+    void dashboardAutoConfigurationKeepsMcpConnectorDisabledByDefault() {
+        this.contextRunner
+                .withPropertyValues("jobrunr.dashboard.enabled=true")
+                .withUserConfiguration(InMemoryStorageProvider.class).run((context) -> {
+                    assertThat(context.getBean(JobRunrDashboardWebServerConfiguration.class))
+                            .hasFieldOrPropertyWithValue("mcpConnectorToken", null)
+                            .hasFieldOrPropertyWithValue("mcpRedactJobParameters", true);
+                    assertThat(context.getBean(JobRunrDashboardWebServer.class))
+                            .hasFieldOrPropertyWithValue("mcpHubConnector", null);
+                });
+    }
+
+    @Test
+    void dashboardAutoConfigurationTakesIntoAccountMcpConnectorSettings() {
+        this.contextRunner
+                .withPropertyValues("jobrunr.dashboard.enabled=true")
+                .withPropertyValues("jobrunr.dashboard.mcp.token=jrc_read_test")
+                .withPropertyValues("jobrunr.dashboard.mcp.url=http://127.0.0.1:1")
+                .withPropertyValues("jobrunr.dashboard.mcp.redact-job-parameters=false")
+                .withUserConfiguration(InMemoryStorageProvider.class).run((context) -> {
+                    assertThat(context.getBean(JobRunrDashboardWebServerConfiguration.class))
+                            .hasFieldOrPropertyWithValue("mcpConnectorToken", "jrc_read_test")
+                            .hasFieldOrPropertyWithValue("mcpHubUrl", "http://127.0.0.1:1")
+                            .hasFieldOrPropertyWithValue("mcpRedactJobParameters", false);
                 });
     }
 

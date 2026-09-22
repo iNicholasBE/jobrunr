@@ -2,6 +2,7 @@ package org.jobrunr.dashboard;
 
 import com.sun.net.httpserver.BasicAuthenticator;
 import com.sun.net.httpserver.HttpContext;
+import org.jobrunr.dashboard.mcp.McpHubConnector;
 import org.jobrunr.dashboard.server.HttpExchangeHandler;
 import org.jobrunr.dashboard.server.WebServer;
 import org.jobrunr.dashboard.server.http.RedirectHttpHandler;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.jobrunr.dashboard.JobRunrDashboardWebServerConfiguration.usingStandardDashboardConfiguration;
 import static org.jobrunr.utils.StringUtils.isNotNullOrEmpty;
+import static org.jobrunr.utils.StringUtils.isNullOrEmpty;
 
 /**
  * Provides a dashboard which gives insights in your jobs and servers.
@@ -30,6 +32,7 @@ public class JobRunrDashboardWebServer {
     private final int port;
     private final BasicAuthenticator basicAuthenticator;
     private final boolean allowAnonymousDataUsage;
+    private final McpHubConnector mcpHubConnector;
 
     private WebServer webServer;
 
@@ -54,6 +57,7 @@ public class JobRunrDashboardWebServer {
         this.allowAnonymousDataUsage = configuration.allowAnonymousDataUsage;
         this.port = configuration.port;
         this.basicAuthenticator = createOptionalBasicAuthenticator(configuration.username, configuration.password);
+        this.mcpHubConnector = createOptionalMcpHubConnector(configuration);
     }
 
     public void start() {
@@ -73,10 +77,12 @@ public class JobRunrDashboardWebServer {
                 storageProvider.getStorageProviderInfo().getName(),
                 webServer.getWebServerHostAddress(),
                 webServer.getWebServerHostPort());
+        if (mcpHubConnector != null) mcpHubConnector.start();
     }
 
     public void stop() {
         if (webServer == null) return;
+        if (mcpHubConnector != null) mcpHubConnector.stop();
         webServer.stop();
         LOGGER.info("JobRunr dashboard stopped");
         webServer = null;
@@ -107,6 +113,11 @@ public class JobRunrDashboardWebServer {
     @VisibleFor("github issue 18")
     JobRunrSseHandler createSSeHandler(StorageProvider storageProvider, JsonMapper jsonMapper) {
         return new JobRunrSseHandler(storageProvider, jsonMapper);
+    }
+
+    private McpHubConnector createOptionalMcpHubConnector(JobRunrDashboardWebServerConfiguration configuration) {
+        if (isNullOrEmpty(configuration.mcpConnectorToken)) return null;
+        return new McpHubConnector(configuration.mcpConnectorToken, configuration.mcpHubUrl, configuration.mcpRedactJobParameters, configuration.port, configuration.username, configuration.password);
     }
 
     private BasicAuthenticator createOptionalBasicAuthenticator(String username, String password) {

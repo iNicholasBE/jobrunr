@@ -1,5 +1,7 @@
 package org.jobrunr.dashboard;
 
+import org.jobrunr.dashboard.mcp.McpHubConnector;
+
 /**
  * This class allows to configure the JobRunrDashboard
  */
@@ -8,6 +10,9 @@ public class JobRunrDashboardWebServerConfiguration {
     String username = null;
     String password = null;
     boolean allowAnonymousDataUsage = true;
+    String mcpConnectorToken = null;
+    String mcpHubUrl = McpHubConnector.DEFAULT_HUB_URL;
+    boolean mcpRedactJobParameters = true;
 
     private JobRunrDashboardWebServerConfiguration() {
 
@@ -56,6 +61,42 @@ public class JobRunrDashboardWebServerConfiguration {
      */
     public JobRunrDashboardWebServerConfiguration andAllowAnonymousDataUsage(boolean allowAnonymousDataUsage) {
         this.allowAnonymousDataUsage = allowAnonymousDataUsage;
+        return this;
+    }
+
+    /**
+     * Connects the dashboard to the hosted JobRunr MCP server (mcp.jobrunr.io) so AI agents can inspect and operate this cluster.
+     * The connection is outbound only. Job parameter values are redacted unless {@link #andMcpJobParameterRedaction(boolean)} says otherwise.
+     *
+     * @param connectorToken the connector token from your mcp.jobrunr.io account, or null to keep the connector disabled
+     * @return the same configuration instance which provides a fluent api
+     */
+    public JobRunrDashboardWebServerConfiguration andMcpConnector(String connectorToken) {
+        return andMcpConnector(connectorToken, McpHubConnector.DEFAULT_HUB_URL);
+    }
+
+    /**
+     * Same as {@link #andMcpConnector(String)} but connects to the given JobRunr MCP server.
+     *
+     * @param connectorToken the connector token, or null to keep the connector disabled
+     * @param hubUrl         the url of the JobRunr MCP server
+     * @return the same configuration instance which provides a fluent api
+     */
+    public JobRunrDashboardWebServerConfiguration andMcpConnector(String connectorToken, String hubUrl) {
+        this.mcpConnectorToken = connectorToken;
+        this.mcpHubUrl = hubUrl;
+        return this;
+    }
+
+    /**
+     * Whether the MCP connector replaces job parameter values by {@code <redacted>} before they leave the JVM. This is true by
+     * default; set it to false to let your agents see the job parameter values.
+     *
+     * @param redactJobParameters whether job parameter values are redacted
+     * @return the same configuration instance which provides a fluent api
+     */
+    public JobRunrDashboardWebServerConfiguration andMcpJobParameterRedaction(boolean redactJobParameters) {
+        this.mcpRedactJobParameters = redactJobParameters;
         return this;
     }
 }

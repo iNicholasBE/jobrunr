@@ -497,6 +497,11 @@ public class JobRunrProperties {
          */
         private String password = null;
 
+        /**
+         * Connects the dashboard to the hosted JobRunr MCP server so AI agents can inspect and operate this cluster.
+         */
+        private Mcp mcp = new Mcp();
+
         public boolean isEnabled() {
             return enabled;
         }
@@ -528,6 +533,61 @@ public class JobRunrProperties {
 
         public void setUsername(String username) {
             this.username = username;
+        }
+
+        public Mcp getMcp() {
+            return mcp;
+        }
+
+        public void setMcp(Mcp mcp) {
+            this.mcp = mcp;
+        }
+    }
+
+    /**
+     * JobRunr MCP connector settings
+     */
+    public static class Mcp {
+
+        /**
+         * The connector token from mcp.jobrunr.io. When set, the dashboard opens an outbound connection to the JobRunr MCP
+         * server so AI agents (Claude Code, Cursor, ...) can inspect and operate this cluster.
+         */
+        private String token = null;
+
+        /**
+         * The url of the JobRunr MCP server.
+         */
+        private String url = "https://mcp.jobrunr.io";
+
+        /**
+         * Replaces job parameter values with &lt;redacted&gt; before they leave the JVM. Only disable this if your job
+         * parameters hold no sensitive data.
+         */
+        private boolean redactJobParameters = true;
+
+        public String getToken() {
+            return token;
+        }
+
+        public void setToken(String token) {
+            this.token = token;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public boolean isRedactJobParameters() {
+            return redactJobParameters;
+        }
+
+        public void setRedactJobParameters(boolean redactJobParameters) {
+            this.redactJobParameters = redactJobParameters;
         }
     }
 

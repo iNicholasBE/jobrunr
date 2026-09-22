@@ -161,7 +161,9 @@ public class JobRunrAutoConfiguration {
         return usingStandardDashboardConfiguration()
                 .andPort(properties.getDashboard().getPort())
                 .andBasicAuthentication(properties.getDashboard().getUsername(), properties.getDashboard().getPassword())
-                .andAllowAnonymousDataUsage(properties.getMiscellaneous().isAllowAnonymousDataUsage());
+                .andAllowAnonymousDataUsage(properties.getMiscellaneous().isAllowAnonymousDataUsage())
+                .andMcpConnector(properties.getDashboard().getMcp().getToken(), properties.getDashboard().getMcp().getUrl())
+                .andMcpJobParameterRedaction(properties.getDashboard().getMcp().isRedactJobParameters());
     }
 
     @Bean
